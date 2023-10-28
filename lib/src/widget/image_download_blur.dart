@@ -123,8 +123,8 @@ class _ImageDownloadBlurState extends State<ImageDownloadBlur> {
               )
             : Container(
                 color: Colors.grey,
-                width: size.width,
-                height: size.height,
+                width: widget.width,
+                height: widget.height,
                 child: downloadProgress != null
                     ? ImageFiltered(
                         imageFilter: ImageFilter.blur(
@@ -160,8 +160,8 @@ class _ImageDownloadBlurState extends State<ImageDownloadBlur> {
               )
         : Container(
             color: Colors.grey.shade300,
-            width: size.width,
-            height: size.height,
+            width: widget.width,
+            height: widget.height,
             child: downloadProgress != null
                 ? ImageFiltered(
                     imageFilter: ImageFilter.blur(
@@ -171,8 +171,8 @@ class _ImageDownloadBlurState extends State<ImageDownloadBlur> {
                     ),
                     child: Image.network(
                       downloadProgress!.imageUrl,
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height,
+                      width: widget.width,
+                      height: widget.height,
                       fit: BoxFit.cover,
                     ),
                   )

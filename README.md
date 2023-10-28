@@ -6,6 +6,10 @@ This Flutter package provides the ability to add shimmer and blur effects to you
 ## Features
 
 ![20231028_104357](https://github.com/Swan1993/image_blur/assets/59397057/f966cc3d-b28e-4e9d-bdde-94f437a7ec2b)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3d2ea3d4961b0bd74d71703d5352e54593e39481
 
 
 ## Getting started

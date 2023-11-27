@@ -1,36 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:image_blur/image_blur.dart';
-import 'package:t3/home.dart';
+import 'package:t3/screen.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class Home extends StatefulWidget {
+  const Home({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<Home> createState() => _HomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomeState extends State<Home> {
   static const List<String> imageUrls = <String>[
     "https://img.freepik.com/free-photo/pier-lake-hallstatt-austria_181624-44201.jpg?size=626&ext=jpg&uid=R22994307&ga=GA1.1.1899687920.1695643728&semt=ais",
     "https://img.freepik.com/free-photo/abstract-autumn-beauty-multi-colored-leaf-vein-pattern-generated-by-ai_188544-9871.jpg?size=626&ext=jpg&uid=R22994307&ga=GA1.1.1899687920.1695643728&semt=ais",
@@ -56,15 +35,11 @@ class _MyHomePageState extends State<MyHomePage> {
     "https://img.freepik.com/free-photo/transparent-droplets-watery-orange-backdrop_23-2148290044.jpg?size=626&ext=jpg&uid=R22994307&ga=GA1.1.1899687920.1695643728&semt=ais",
     "https://img.freepik.com/free-photo/grunge-style-watercolour-texture-background_1048-7931.jpg?size=626&ext=jpg&uid=R22994307&ga=GA1.1.1899687920.1695643728&semt=ais",
   ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        title: const Text("Test"),
-        centerTitle: true,
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
+        title: const Text('Screen'),
       ),
       body: SingleChildScrollView(
         child: SizedBox(
@@ -83,8 +58,10 @@ class _MyHomePageState extends State<MyHomePage> {
               return SizedBox(
                 height: MediaQuery.of(context).size.height,
                 width: MediaQuery.of(context).size.width,
-                child: ImageBlur.imageDownloadBlur(
-                  imageUrl: imageUrls[index],
+                child: ImageBlur.imageRectangleBlur(
+                  imageNetwork: imageUrls[index],
+                  cacheHeight: 1000,
+                  cacheWidth: 1000,
                 ),
               );
             },
@@ -94,11 +71,10 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => const Home()));
+              context, MaterialPageRoute(builder: (context) => const Screen()));
         },
-        tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }

@@ -598,12 +598,12 @@ class ImageBlur {
   static Widget imageDownloadBlur({
     required final String imageUrl,
     final bool? loadingProgress,
-    final BoxFit? fit,
+    final BoxFit? fit = BoxFit.cover,
     final double? height,
     final double? width,
     final BlendMode? colorBlendMode,
     final Color? color,
-    final AlignmentGeometry alignment = Alignment.center,
+    final Alignment alignment = Alignment.center,
     final Rect? centerSlice,
     final Animation<double>? opacity,
     final FilterQuality filterQuality = FilterQuality.low,
@@ -618,8 +618,13 @@ class ImageBlur {
     final Map<String, String>? headers,
     final int? cacheWidth,
     final int? cacheHeight,
-    final double loadingIconSize = 35,
     final TileMode tileMode = TileMode.decal,
+    final Duration fadeInDuration = const Duration(milliseconds: 500),
+    final Color backgroundImage = const Color.fromRGBO(238, 238, 238, 1),
+    final double scale = 1.0,
+    final int? memCacheHeight,
+    final int? memCacheWidth,
+    final Duration cacheManagerTime = const Duration(minutes: 35),
   }) {
     return ImageDownloadBlur(
       imageUrl: imageUrl,
@@ -643,9 +648,12 @@ class ImageBlur {
       opacity: opacity,
       repeat: repeat,
       semanticLabel: semanticLabel,
-      loadingIconSize: loadingIconSize,
-      loadingProgress: loadingProgress,
       tileMode: tileMode,
+      fadeInDuration: fadeInDuration,
+      backgroundImage: backgroundImage,
+      memCacheHeight: memCacheHeight,
+      memCacheWidth: memCacheWidth,
+      cacheManagerTime: cacheManagerTime,
     );
   }
 }

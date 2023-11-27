@@ -1,11 +1,9 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
-
-import '../model/shimmer_image_model.dart';
+import '../tools/shimmer_image_tools.dart';
 
 // ignore: must_be_immutable
-class ImageRectangleBlur extends StatelessWidget {
+class ImageRectangleBlur extends StatefulWidget {
   final String? imageNetwork;
 
   final String? imageAssets;
@@ -54,69 +52,108 @@ class ImageRectangleBlur extends StatelessWidget {
 
   Map<String, String>? headers;
 
-  int? cacheWidth;
+  final int? cacheWidth;
 
-  int? cacheHeight;
+  final int? cacheHeight;
 
-  ImageRectangleBlur({
-    Key? key,
-    this.imageNetwork,
-    this.imageAssets,
-    this.durationShimmer = 3,
-    this.durationBlur = 2,
-    this.height,
-    this.width,
-    this.fit = BoxFit.cover,
-    this.colorBlendMode = BlendMode.srcIn,
-    this.color,
-    this.alignment = Alignment.center,
-    this.centerSlice,
-    this.opacity,
-    this.filterQuality = FilterQuality.low,
-    this.repeat = ImageRepeat.noRepeat,
-    this.matchTextDirection = false,
-    this.gapLessPlayback = false,
-    this.semanticLabel,
-    this.frameBuilder,
-    this.loadingBuilder,
-    this.errorBuilder,
-    this.isAntiAlias = false,
-    this.isBlur = true,
-    this.isShimmer = true,
-    this.headers,
-    this.cacheWidth,
-    this.cacheHeight,
-  }) : super(key: key);
+  final Color baseColorShimmer;
+
+  final Color highlightColorShimmer;
+
+  final Color colorShimmer;
+
+  ImageRectangleBlur(
+      {Key? key,
+      this.imageNetwork,
+      this.imageAssets,
+      this.durationShimmer = 3,
+      this.durationBlur = 2,
+      this.height,
+      this.width,
+      this.fit = BoxFit.cover,
+      this.colorBlendMode = BlendMode.srcIn,
+      this.color,
+      this.alignment = Alignment.center,
+      this.centerSlice,
+      this.opacity,
+      this.filterQuality = FilterQuality.low,
+      this.repeat = ImageRepeat.noRepeat,
+      this.matchTextDirection = false,
+      this.gapLessPlayback = false,
+      this.semanticLabel,
+      this.frameBuilder,
+      this.loadingBuilder,
+      this.errorBuilder,
+      this.isAntiAlias = false,
+      this.isBlur = true,
+      this.isShimmer = true,
+      this.headers,
+      this.cacheWidth,
+      this.cacheHeight,
+      this.baseColorShimmer = const Color.fromRGBO(224, 224, 224, 1),
+      this.highlightColorShimmer = const Color.fromRGBO(245, 245, 245, 1),
+      this.colorShimmer = Colors.white})
+      : super(key: key);
+
+  @override
+  State<ImageRectangleBlur> createState() => _ImageRectangleBlurState();
+}
+
+class _ImageRectangleBlurState extends State<ImageRectangleBlur>
+    with SingleTickerProviderStateMixin {
+  late AnimationController blurController;
+  late Animation<double> sigmaXAnimation;
+
+  @override
+  void initState() {
+    blurController = AnimationController(
+        duration: Duration(seconds: widget.durationBlur), vsync: this);
+    sigmaXAnimation = Tween<double>(begin: 5, end: 0.0).animate(blurController);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    blurController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width,
-      height: height,
+      width: widget.width,
+      height: widget.height,
       child: FutureBuilder(
         future: Future.delayed(
-            Duration(seconds: isShimmer ? durationShimmer : 0), () => true),
+            Duration(seconds: widget.isShimmer ? widget.durationShimmer : 0),
+            () => true),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return isShimmer
+            return widget.isShimmer
                 ? ShimmerImage(
                     height: MediaQuery.of(context).size.height,
                     width: MediaQuery.of(context).size.width,
+                    baseColorShimmer: widget.baseColorShimmer,
+                    colorShimmer: widget.colorShimmer,
+                    highlightColorShimmer: widget.highlightColorShimmer,
                   )
                 : const SizedBox.shrink();
           } else if (snapshot.connectionState == ConnectionState.done) {
             return FutureBuilder(
               future: Future.delayed(
-                  Duration(seconds: isBlur ? durationBlur : 0), () => true),
+                  Duration(seconds: widget.isBlur ? widget.durationBlur : 0),
+                  () => true),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return isBlur
+                  return widget.isBlur
                       ? Stack(
                           fit: StackFit.expand,
                           children: [
-                            (imageAssets != null || imageNetwork != null)
-                                ? (imageAssets != null
+                            (widget.imageAssets != null ||
+                                    widget.imageNetwork != null)
+                                ? (widget.imageAssets != null
                                     ? Image.asset(
-                                        imageAssets!,
+                                        widget.imageAssets!,
                                         fit: BoxFit.cover,
                                         height:
                                             MediaQuery.of(context).size.height,
@@ -124,7 +161,7 @@ class ImageRectangleBlur extends StatelessWidget {
                                             MediaQuery.of(context).size.width,
                                       )
                                     : Image.network(
-                                        imageNetwork!,
+                                        widget.imageNetwork!,
                                         fit: BoxFit.cover,
                                         height:
                                             MediaQuery.of(context).size.height,
@@ -132,65 +169,68 @@ class ImageRectangleBlur extends StatelessWidget {
                                             MediaQuery.of(context).size.width,
                                       ))
                                 : const Text("Image not provided"),
-                            BackdropFilter(
-                              filter: ImageFilter.blur(
-                                sigmaX: 5.0,
-                                sigmaY: 5.0,
-                                tileMode: TileMode.decal,
-                              ),
-                              child: Container(
-                                color: Colors.black.withOpacity(0.1),
+                            ClipRect(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: sigmaXAnimation.value,
+                                  sigmaY: sigmaXAnimation.value,
+                                  tileMode: TileMode.decal,
+                                ),
+                                child: Container(
+                                  color: Colors.black.withOpacity(0.03),
+                                ),
                               ),
                             ),
                           ],
                         )
                       : const SizedBox.shrink();
                 } else if (snapshot.connectionState == ConnectionState.done) {
-                  if (imageNetwork != null || imageAssets != null) {
-                    return (imageNetwork != null
+                  if (widget.imageNetwork != null ||
+                      widget.imageAssets != null) {
+                    return (widget.imageNetwork != null
                         ? Image.network(
-                            imageNetwork!,
+                            widget.imageNetwork!,
                             fit: BoxFit.cover,
-                            colorBlendMode: colorBlendMode,
-                            color: color,
-                            alignment: alignment,
-                            height: height,
-                            width: width,
-                            centerSlice: centerSlice,
-                            errorBuilder: errorBuilder,
-                            filterQuality: filterQuality,
-                            frameBuilder: frameBuilder,
-                            gaplessPlayback: gapLessPlayback,
-                            isAntiAlias: isAntiAlias,
-                            loadingBuilder: loadingBuilder,
-                            opacity: opacity,
-                            semanticLabel: semanticLabel,
-                            repeat: repeat,
-                            matchTextDirection: matchTextDirection,
-                            cacheHeight: cacheHeight,
-                            cacheWidth: cacheWidth,
-                            headers: headers,
+                            colorBlendMode: widget.colorBlendMode,
+                            color: widget.color,
+                            alignment: widget.alignment,
+                            height: widget.height,
+                            width: widget.width,
+                            centerSlice: widget.centerSlice,
+                            errorBuilder: widget.errorBuilder,
+                            filterQuality: widget.filterQuality,
+                            frameBuilder: widget.frameBuilder,
+                            gaplessPlayback: widget.gapLessPlayback,
+                            isAntiAlias: widget.isAntiAlias,
+                            loadingBuilder: widget.loadingBuilder,
+                            opacity: widget.opacity,
+                            semanticLabel: widget.semanticLabel,
+                            repeat: widget.repeat,
+                            matchTextDirection: widget.matchTextDirection,
+                            cacheHeight: widget.cacheHeight,
+                            cacheWidth: widget.cacheWidth,
+                            headers: widget.headers,
                           )
                         : Image.asset(
-                            imageAssets!,
+                            widget.imageAssets!,
                             fit: BoxFit.cover,
-                            colorBlendMode: colorBlendMode,
-                            color: color,
-                            alignment: alignment,
-                            height: height,
-                            width: width,
-                            centerSlice: centerSlice,
-                            errorBuilder: errorBuilder,
-                            filterQuality: filterQuality,
-                            frameBuilder: frameBuilder,
-                            gaplessPlayback: gapLessPlayback,
-                            isAntiAlias: isAntiAlias,
-                            opacity: opacity,
-                            semanticLabel: semanticLabel,
-                            repeat: repeat,
-                            matchTextDirection: matchTextDirection,
-                            cacheHeight: cacheHeight,
-                            cacheWidth: cacheWidth,
+                            colorBlendMode: widget.colorBlendMode,
+                            color: widget.color,
+                            alignment: widget.alignment,
+                            height: widget.height,
+                            width: widget.width,
+                            centerSlice: widget.centerSlice,
+                            errorBuilder: widget.errorBuilder,
+                            filterQuality: widget.filterQuality,
+                            frameBuilder: widget.frameBuilder,
+                            gaplessPlayback: widget.gapLessPlayback,
+                            isAntiAlias: widget.isAntiAlias,
+                            opacity: widget.opacity,
+                            semanticLabel: widget.semanticLabel,
+                            repeat: widget.repeat,
+                            matchTextDirection: widget.matchTextDirection,
+                            cacheHeight: widget.cacheHeight,
+                            cacheWidth: widget.cacheWidth,
                           ));
                   } else {
                     return const Text("Image not provided");

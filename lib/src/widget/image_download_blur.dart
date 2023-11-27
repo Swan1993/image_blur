@@ -1,14 +1,12 @@
+
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:flutter/material.dart';
-
-import '../model/ink_drop.dart';
-import '../model/progress_download_model.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class ImageDownloadBlur extends StatefulWidget {
   final String imageUrl;
-
-  final bool? loadingProgress;
 
   final BoxFit? fit;
 
@@ -20,7 +18,7 @@ class ImageDownloadBlur extends StatefulWidget {
 
   final Color? color;
 
-  final AlignmentGeometry alignment;
+  final Alignment alignment;
 
   final Rect? centerSlice;
 
@@ -50,36 +48,51 @@ class ImageDownloadBlur extends StatefulWidget {
 
   final int? cacheHeight;
 
-  final double loadingIconSize;
-
   final TileMode tileMode;
 
-  const ImageDownloadBlur(
-      {required this.imageUrl,
-      super.key,
-      this.loadingProgress = true,
-      this.fit = BoxFit.cover,
-      this.height,
-      this.width,
-      this.colorBlendMode = BlendMode.srcIn,
-      this.color,
-      this.alignment = Alignment.center,
-      this.centerSlice,
-      this.opacity,
-      this.filterQuality = FilterQuality.low,
-      this.repeat = ImageRepeat.noRepeat,
-      this.matchTextDirection = false,
-      this.gapLessPlayback = false,
-      this.semanticLabel,
-      this.frameBuilder,
-      this.loadingBuilder,
-      this.errorBuilder,
-      this.isAntiAlias = false,
-      this.headers,
-      this.cacheWidth,
-      this.cacheHeight,
-      this.loadingIconSize = 35,
-      this.tileMode = TileMode.decal});
+  final Duration fadeInDuration;
+
+  final Color backgroundImage;
+
+  final double scale;
+
+  final int? memCacheHeight;
+
+  final int? memCacheWidth;
+
+  final Duration cacheManagerTime;
+
+  const ImageDownloadBlur({
+    required this.imageUrl,
+    super.key,
+    this.fit = BoxFit.cover,
+    this.height,
+    this.width,
+    this.colorBlendMode = BlendMode.srcIn,
+    this.color,
+    this.alignment = Alignment.center,
+    this.centerSlice,
+    this.opacity,
+    this.filterQuality = FilterQuality.low,
+    this.repeat = ImageRepeat.noRepeat,
+    this.matchTextDirection = false,
+    this.gapLessPlayback = false,
+    this.semanticLabel,
+    this.frameBuilder,
+    this.loadingBuilder,
+    this.errorBuilder,
+    this.isAntiAlias = false,
+    this.headers,
+    this.cacheWidth,
+    this.cacheHeight,
+    this.tileMode = TileMode.decal,
+    this.fadeInDuration = const Duration(milliseconds: 500),
+    this.backgroundImage = const Color.fromRGBO(238, 238, 238, 1),
+    this.scale = 1.0,
+    this.memCacheHeight,
+    this.memCacheWidth,
+    this.cacheManagerTime = const Duration(minutes: 35),
+  });
 
   @override
   // ignore: library_private_types_in_public_api
@@ -87,96 +100,69 @@ class ImageDownloadBlur extends StatefulWidget {
 }
 
 class _ImageDownloadBlurState extends State<ImageDownloadBlur> {
-  ImageDownloadProgress? downloadProgress;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Wait for 2 seconds
-    Future.delayed(const Duration(seconds: 1), () {
-      // Initialize the ImageDownloadProgress object
-      downloadProgress = ImageDownloadProgress(imageUrl: widget.imageUrl);
-
-      // Start the download
-      downloadProgress!.downloadImage(() {
-        // The progress value has been updated, so rebuild the UI
-        setState(() {});
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    downloadProgress;
-    super.dispose();
-  }
+  double blurValue = 0.0;
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return widget.loadingProgress == true
-        ? (downloadProgress == null)
-            ? InkDrop(
-                color: Theme.of(context).primaryColor,
-                size: widget.loadingIconSize,
-              )
-            : Container(
-                color: Colors.grey,
+    return SizedBox(
+      height: widget.height,
+      width: widget.width,
+      child: CachedNetworkImage(
+        imageUrl: widget.imageUrl,
+        cacheManager: CacheManager(
+        Config(
+        'cacheKey',
+        stalePeriod: widget.cacheManagerTime,
+      ),),
+        height: widget.height,
+        width: widget.width,
+        fit: widget.fit,
+        memCacheHeight: widget.memCacheHeight,
+        memCacheWidth: widget.memCacheWidth,
+        progressIndicatorBuilder: (context, url, downloadProgress) {
+          if (downloadProgress.totalSize != null) {
+            double progressValue = (downloadProgress.downloaded /
+                downloadProgress.totalSize!) * 25;
+            blurValue = 25 - progressValue;
+            return ImageFiltered(
+              imageFilter: ImageFilter.blur(
+                sigmaX: blurValue,
+                sigmaY: blurValue,
+                tileMode: TileMode.decal,
+              ),
+              child: Image.network(
+                widget.imageUrl,
                 width: widget.width,
                 height: widget.height,
-                child: downloadProgress != null
-                    ? ImageFiltered(
-                        imageFilter: ImageFilter.blur(
-                          sigmaX: downloadProgress!.blurValue,
-                          sigmaY: downloadProgress!.blurValue,
-                          tileMode: TileMode.decal,
-                        ),
-                        child: Image.network(
-                          downloadProgress!.imageUrl,
-                          width: widget.width,
-                          height: widget.height,
-                          fit: widget.fit,
-                          colorBlendMode: widget.colorBlendMode,
-                          color: widget.color,
-                          alignment: widget.alignment,
-                          centerSlice: widget.centerSlice,
-                          errorBuilder: widget.errorBuilder,
-                          filterQuality: widget.filterQuality,
-                          frameBuilder: widget.frameBuilder,
-                          gaplessPlayback: widget.gapLessPlayback,
-                          isAntiAlias: widget.isAntiAlias,
-                          loadingBuilder: widget.loadingBuilder,
-                          opacity: widget.opacity,
-                          semanticLabel: widget.semanticLabel,
-                          repeat: widget.repeat,
-                          matchTextDirection: widget.matchTextDirection,
-                          cacheHeight: widget.cacheHeight,
-                          cacheWidth: widget.cacheWidth,
-                          headers: widget.headers,
-                        ),
-                      )
-                    : const SizedBox(),
-              )
-        : Container(
-            color: Colors.grey.shade300,
-            width: widget.width,
-            height: widget.height,
-            child: downloadProgress != null
-                ? ImageFiltered(
-                    imageFilter: ImageFilter.blur(
-                      sigmaX: downloadProgress!.blurValue,
-                      sigmaY: downloadProgress!.blurValue,
-                      tileMode: widget.tileMode,
-                    ),
-                    child: Image.network(
-                      downloadProgress!.imageUrl,
-                      width: widget.width,
-                      height: widget.height,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : const SizedBox(),
-          );
+                fit: widget.fit,
+                colorBlendMode: widget.colorBlendMode,
+                color: widget.color,
+                alignment: widget.alignment,
+                centerSlice: widget.centerSlice,
+                errorBuilder: widget.errorBuilder,
+                filterQuality: widget.filterQuality,
+                gaplessPlayback: widget.gapLessPlayback,
+                isAntiAlias: widget.isAntiAlias,
+                opacity: widget.opacity,
+                semanticLabel: widget.semanticLabel,
+                repeat: widget.repeat,
+                matchTextDirection: widget.matchTextDirection,
+                cacheHeight: widget.cacheHeight,
+                cacheWidth: widget.cacheWidth,
+                frameBuilder: widget.frameBuilder,
+                scale: widget.scale,
+              ),
+            );
+          } else {
+          return  Container(
+              color: widget.backgroundImage,
+              width: widget.width,
+              height: widget.height,
+            );
+          }
+
+        },
+      ),
+    );
   }
 }
